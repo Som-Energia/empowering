@@ -64,6 +64,20 @@ class AmonMeasuresMeasurements(EmpoweringResource):
         request = http.Request('DELETE', self.get_url())
         return request, parsers.parse_json
 
+class ResidentialTimeofuseAmonMeasures(EmpoweringResource):
+    path = 'residential_timeofuse_amon_measures'
+
+    @base.apimethod
+    def get(self):
+        raise base.MethodNotSupported
+
+    @base.apimethod
+    def update(self, obj, etag):
+        raise base.MethodNotSupported
+
+    @base.apimethod
+    def delete(self, obj, etag):
+        raise base.MethodNotSupported
 
 class Measures(AmonMeasuresMeasurements):
     def __init__(self, *args, **kwargs):
@@ -156,6 +170,11 @@ class Empowering(base.Resource):
     def measures(self):
         warn('Deprecated. Use amon_measures_measurements', DeprecationWarning)
         return Measures(self)
+
+    @base.resource(ResidentialTimeofuseAmonMeasures)
+    def residential_timeofuse_amon_measures(self):
+        return ResidentialTimeofuseAmonMeasures(self)
+
 
     @base.resource(AmonMeasuresMeasurements)
     def amon_measures_measurements(self):
