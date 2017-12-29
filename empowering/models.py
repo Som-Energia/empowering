@@ -1,6 +1,20 @@
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, post_dump
 from marshmallow.validate import OneOf
 
+def remove_none(struct):
+    converted = struct.copy()
+    for key, value in struct.items():
+        if isinstance(value, dict):
+            converted[key] = remove_none(value)
+        else:
+            if (value is None or (isinstance(value, bool) and not value)): 
+                del converted[key]
+    return converted
+
+class BaseSchema(Schema):
+    @post_dump
+    def remove_none(self, data):
+        return remove_none(data)
 
 class Integer(fields.Integer):
     def __init__(self, default=None, **kwargs):
@@ -15,7 +29,7 @@ class StringDateTime(fields.DateTime):
             return super(StringDateTime, self)._serialize(value, attr, obj)
 
 
-class CustomerAddress(Schema):
+class CustomerAddress(BaseSchema):
     buildingId = fields.UUID()
     country = fields.String()
     countryCode = fields.String()
@@ -28,7 +42,7 @@ class CustomerAddress(Schema):
     parcelNumber = fields.String()
 
 
-class CustomerBuildingData(Schema):
+class CustomerBuildingData(BaseSchema):
     buildingConstructionYear = Integer()
     dwellingArea = Integer()
     buildingVolume = Integer()
@@ -57,14 +71,14 @@ class CustomerBuildingData(Schema):
     ]))
 
 
-class CustomerProfileEducationLevel(Schema):
+class CustomerProfileEducationLevel(BaseSchema):
     edu_prim = Integer()
     edu_sec = Integer()
     edu_uni = Integer()
     edu_noStudies = Integer()
 
 
-class CustomerProfile(Schema):
+class CustomerProfile(BaseSchema):
     totalPersonNumber = Integer()
     minorsPersonsNumber = Integer()
     workingAgePersonsNumber = Integer()
@@ -73,11 +87,11 @@ class CustomerProfile(Schema):
     femalePersonsNumber = Integer()
     educationLevel = fields.Nested(CustomerProfileEducationLevel)
 
-class CustomerCustomisedGroupingCriteria(Schema):
+class CustomerCustomisedGroupingCriteria(BaseSchema):
     pass
 
 
-class CustomerCustomisedServiceParameters(Schema):
+class CustomerCustomisedServiceParameters(BaseSchema):
     OT101 = fields.String()
     OT103 = fields.String()
     OT105 = fields.String()
@@ -94,7 +108,7 @@ class CustomerCustomisedServiceParameters(Schema):
     OT703 = fields.String()
 
 
-class Customer(Schema):
+class Customer(BaseSchema):
     customerId = fields.UUID()
     address = fields.Nested(CustomerAddress)
     buildingData = fields.Nested(CustomerBuildingData)
@@ -106,25 +120,48 @@ class Customer(Schema):
         CustomerCustomisedServiceParameters
     )
 
-
-class Device(Schema):
+class Device(BaseSchema):
     dateStart = StringDateTime(format='iso')
     dateEnd = StringDateTime(format='iso')
     deviceId = fields.UUID()
 
+class Tariff(BaseSchema):
+    dateStart = StringDateTime(format='iso')
+    dateEnd = StringDateTime(format='iso')
+    tariffId = fields.String()
 
-class Contract(Schema):
+class TariffHistory(BaseSchema):
+    dateStart = StringDateTime(format='iso')
+    dateEnd = StringDateTime(format='iso')
+    tariffId = fields.String()
+
+class Power(BaseSchema):
+    dateStart = StringDateTime(format='iso')
+    dateEnd = StringDateTime(format='iso')
+    power = Integer() 
+ 
+class PowerHistory(BaseSchema):
+    dateStart = StringDateTime(format='iso')
+    dateEnd = StringDateTime(format='iso')
+    power = Integer() 
+
+class Contract(BaseSchema):
     payerId = fields.UUID()
     ownerId = fields.UUID()
     signerId = fields.UUID()
     power = Integer()
+    power_ = fields.Nested(Power)
+    powerHistory = fields.List(fields.Nested(PowerHistory))
     dateStart = StringDateTime(format='iso')
     dateEnd = StringDateTime(format='iso')
     contractId = fields.String()
     tariffId = fields.String()
+    tariff_ = fields.Nested(Tariff)
+    tariffHistory = fields.List(fields.Nested(TariffHistory))
     version = Integer()
     activityCode = fields.String()
     meteringPointId = fields.UUID()
+    climiaticZone = fields.String()
     weatherStationId = fields.UUID()
     experimentalGroupUser = fields.Boolean()
     experimentalGroupUserTest = fields.Boolean()
@@ -134,7 +171,7 @@ class Contract(Schema):
     devices = fields.List(fields.Nested(Device))
 
 
-class Reading(Schema):
+class Reading(BaseSchema):
     type = fields.Str(validate=OneOf([
         'electricityConsumption', 'electricityKiloVoltAmpHours',
         'heatConsumption', 'gasConsumption', 'estimatedElectricityConsumption',
@@ -145,13 +182,13 @@ class Reading(Schema):
     period = fields.Str(validate=OneOf(['INSTANT', 'CUMULATIVE', 'PULSE']))
 
 
-class Measurement(Schema):
+class Measurement(BaseSchema):
     type = fields.Str(validate=OneOf(['electricityConsumption']))
     timestamp = StringDateTime(format='iso')
     value = fields.Float()
 
 
-class AmonMeasure(Schema):
+class AmonMeasure(BaseSchema):
     deviceId = fields.UUID()
     meteringPointId = fields.UUID()
     readings = fields.List(fields.Nested(Reading))
