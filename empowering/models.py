@@ -145,6 +145,10 @@ class PowerHistory(BaseSchema):
     dateEnd = StringDateTime(format='iso')
     power = Integer() 
 
+class Report(BaseSchema):
+    initialMonth = Integer() 
+    language = fields.String() 
+
 class Contract(BaseSchema):
     payerId = fields.UUID()
     ownerId = fields.UUID()
@@ -169,7 +173,7 @@ class Contract(BaseSchema):
     activeUserDate = StringDateTime(format='iso')
     customer = fields.Nested(Customer)
     devices = fields.List(fields.Nested(Device))
-
+    report = fields.Nested(Report)
 
 class Reading(BaseSchema):
     type = fields.Str(validate=OneOf([
