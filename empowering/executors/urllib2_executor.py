@@ -7,7 +7,7 @@ from libsaas.executors import base, urllib2_executor
 
 logger = logging.getLogger('empowering.executors.urllib2_executor')
 
-API_HOST = 'api.empowering.cimne.com'
+API_HOST = 'api.beedataanalytics.com'
 DEBUG_API_HOST = '91.121.140.152'
 
 
